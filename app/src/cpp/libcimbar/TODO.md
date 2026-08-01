@@ -1,4 +1,4 @@
-### [LIBCIMBAR](https://github.com/sz3/libcimbar)
+### [LIBCIMBAR](https://github.com/turtleSST/libcimbar)
 ### [DETAILS](DETAILS.md) | [PERFORMANCE](PERFORMANCE.md) | TODO
 
 ## Room for improvement/next steps
@@ -40,7 +40,7 @@ Performance optimizations aside, there are a number of paths that might be inter
 	* I expect that state of the art ECC will allow 6-15% better throughput.
 		* it's a wide range due to various unknowns (unknowns to me, anyway)
 * proper GPU support (OpenCV + openCL) on android?
-	* It *might* be useful. [CFC]((https://github.com/sz3/cfc) is the current test bed for this.
+	* It *might* be useful. [CFC](https://github.com/turtleSST/cfc) is the current test bed for this.
 * wasm decoder?
 	* android is going to kick CFC out of the store! (testing requirement)
 		* so it might be time to write this...

@@ -1,4 +1,4 @@
-### [LIBCIMBAR](https://github.com/sz3/libcimbar)
+### [LIBCIMBAR](https://github.com/turtleSST/libcimbar)
 ### DETAILS | [PERFORMANCE](PERFORMANCE.md) | [TODO](TODO.md)
 
 ## The premise
@@ -72,7 +72,7 @@ The solution cimbar implements is to use [fountain codes](https://en.wikipedia.o
 
 Fountain (wirehair) codes:
 
-* introduce a small amount of overhead for bookkeeping purposes (in 6 bit cimbar, it is 6 bytes per 744 of real data)
+* introduce a small amount of overhead for bookkeeping purposes (the v2 6-bit mode uses 8 bytes per 1867 bytes of Wirehair data)
 * allow the decoder to reconstruct a file over multiple fountain frames
 * *regardless of what order* the multiple fountain frames are received
 * even if frames are missing, as long as N+1 frames are received (where N is `file_size`/`bytes_per_frame`)
@@ -80,11 +80,17 @@ Fountain (wirehair) codes:
 These properties may appear to be magical as you consider them more, and they do come with a few tradeoffs:
 
 1. the fountain decoder defines how large a file can be
-	* in cimbar's case, capped at 33.55MB
+	* Wirehair uses 16-bit block indexes; v2 keeps this limit and changes the
+	  mode-B frame from 12 smaller blocks to 4 larger blocks, for a 119.488MB
+	  compressed-stream ceiling (100MB is the practical target)
 2. wirehair requires the file contents to be stored in RAM
 	* this relates to the size limit!
 
-The size constraint is less of an obstacle than it may seem -- the fountain codes are essentially being used as a wire format, and the encoder and decoder could agree on a scheme to split up, and then reassemble, larger files. Cimbar does not (yet?) implement this, however!
+The v2 stream header expands the file-size field from 25 to 32 bits while
+retaining the original first six header bytes for color calibration. The WASM
+build uses a fixed 512 MiB heap so large files do not trigger memory-growth
+pauses. Encoders and decoders must be rebuilt together because v2 changes the
+fountain header size and frame chunking.
 
 ## Implementation: Decoder
 

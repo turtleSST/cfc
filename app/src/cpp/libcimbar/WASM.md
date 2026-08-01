@@ -2,9 +2,9 @@
 
 [cimbar.org](https://cimbar.org)
 
-## Releases
+## Encoder bundle
 
-wasm and asm.js releases are available [here](https://github.com/sz3/libcimbar/releases/latest). The wasm build is what cimbar.org uses. [cimbar_js.html](https://github.com/sz3/libcimbar/releases/latest/cimbar_js.html) can be downloaded and opened/run in a local web browser -- no install required.
+The self-contained v2 encoder bundle is available as [`cimbar_js.html`](https://github.com/turtleSST/libcimbar/releases/download/v0.6.8-fountain-v2/cimbar_js.html). It can be downloaded and opened in a modern browser without installation.
 
 ## Build
 

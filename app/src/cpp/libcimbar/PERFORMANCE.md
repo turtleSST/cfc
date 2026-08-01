@@ -1,4 +1,4 @@
-### [LIBCIMBAR](https://github.com/sz3/libcimbar)
+### [LIBCIMBAR](https://github.com/turtleSST/libcimbar)
 ### [DETAILS](DETAILS.md) | PERFORMANCE | [TODO](TODO.md)
 
 ## Numbers of note
@@ -31,7 +31,7 @@
 
 * details:
 	* cimbar has built-in compression using zstd. What's being measured here is bits over the wire, e.g. data after compression is applied.
-	* these numbers are using https://github.com/sz3/cfc, running with 4 CPU threads on a venerable Qualcomm Snapdragon 625
+	* these numbers are using https://github.com/turtleSST/cfc, running with 4 CPU threads on a venerable Qualcomm Snapdragon 625
 		* more modern cell CPUs run the decoder more quickly, but it turns out that this does not benefit performance much: the camera is usually the bottleneck.
 	* the sender is the cimbar.org wasm implementation. An equivalent command line is `./cimbar_send /path/to/file`
 		* cimbar.org uses the `shakycam` option to allow the receiver to detect/discard "in between" frames as part of the scan step. This allows it to spend more processing time decoding real data.

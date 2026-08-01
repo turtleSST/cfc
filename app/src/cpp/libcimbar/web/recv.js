@@ -45,8 +45,8 @@ var Sink = function () {
       }
 
       if (res > 0) {
-        const res32t = Number(res & 0xFFFFFFFFn);; // truncate BigInt res (int64_t) to a uint32_t
-        Sink.reassemble_file(res32t);
+        // WASM_BIGINT keeps the 64-bit (encode_id, file_size) id intact.
+        Sink.reassemble_file(res);
       }
     },
 

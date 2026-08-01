@@ -1,4 +1,4 @@
-### [简介](https://github.com/sz3/cimbar) | [关于](https://github.com/sz3/cimbar/blob/master/ABOUT.md) | [CFC](https://github.com/sz3/cfc) | LIBCIMBAR
+### [简介](https://github.com/sz3/cimbar) | [关于](https://github.com/sz3/cimbar/blob/master/ABOUT.md) | [CFC](https://github.com/turtleSST/cfc) | LIBCIMBAR
 ### [详细内容](DETAILS.md) | [演示](PERFORMANCE.md) | [下一步](TODO.md)
 
 ## libcimbar: 彩色图形矩阵条形码
@@ -17,7 +17,7 @@
 * 网页端：https://cimbar.org
 
 也可以是一个使用手机摄像头读取条形码的手机APP：
-* 安卓APP：https://github.com/sz3/cfc
+* 安卓APP：https://github.com/turtleSST/cfc
 
 APP并未使用互联网/蓝牙/NFC等，所有数据都是通过摄像头传输的。
 
@@ -25,13 +25,13 @@ APP并未使用互联网/蓝牙/NFC等，所有数据都是通过摄像头传输
 
 `cimbar`是一种高密度的二维条形码格式。数据存储在彩色图块网格中——根据选择哪个图块和选择哪种颜色来绘制图块，对信息进行编码。对数据应用Reed-Solomon纠错，预计错误率在1%左右。
 
-`libcimbar`，这是个优化版本，包括一个基于喷泉代码（`wirehair`）和zstd压缩的简单文件编码协议。最高33MB（压缩后）的文件以一系列 `cimbar` 代码编码，输出为图像或视频等。一旦成功解码了足够多帧，该文件将被重建和解压缩。即使图像接收出错，或者有些图像已损坏或丢失，也不会有太大问题。
+`libcimbar`，这是个优化版本，包括一个基于喷泉代码（`wirehair`）和zstd压缩的简单文件编码协议。当前 v2 的 Mode-B 格式支持约119MB（实际目标约100MB）的压缩后文件，以一系列 `cimbar` 代码编码，输出为图像或视频等。一旦成功解码了足够多帧，该文件将被重建和解压缩。即使图像接收出错，或者有些图像已损坏或丢失，也不会有太大问题。
 
 ## 平台
 
 该代码是用C++编写的，并在 amd64+linux、arm64+android（仅限解码器）和 emscripten+WASM（仅限编码器）上开发/测试。在其他平台上应该也可以工作。
 
-至关重要的是，由于编码器编译为 asmjs 和 wasm ，它可以在任何具有现代网络浏览器的设备上运行。对于离线使用，您可以将 `cimbar.org` 安装为渐进式web应用程序，或[下载最新版本](https://github.com/sz3/libcimbar/releases/latest)。至于 `cimbar_js.html` ，将其保存在本地，然后在浏览器中打开。
+至关重要的是，由于编码器编译为 asmjs 和 wasm ，它可以在任何具有现代网络浏览器的设备上运行。对于离线使用，您可以将 `cimbar.org` 安装为渐进式web应用程序，或[下载 v2 编码器](https://github.com/turtleSST/libcimbar/releases/download/v0.6.8-fountain-v2/cimbar_js.html)。至于 `cimbar_js.html` ，将其保存在本地，然后在浏览器中打开。
 
 ## 依赖库
 
@@ -95,7 +95,7 @@ echo outputprefix*.png | ./cimbar -o /tmp
 ./cimbar_send inputfile.pdf
 ```
 
-您还可以使用 [cimbar.org](https://cimbar.org) 对文件进行编码，或最新的 [release](https://github.com/sz3/libcimbar/releases/latest).
+您还可以使用 [cimbar.org](https://cimbar.org) 对文件进行编码，或使用[v2 编码器发布包](https://github.com/turtleSST/libcimbar/releases/download/v0.6.8-fountain-v2/cimbar_js.html)。
 
 ## 演示
 

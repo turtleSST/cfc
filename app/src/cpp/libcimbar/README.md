@@ -1,4 +1,4 @@
-### [INTRODUCTION](https://github.com/sz3/cimbar) | [ABOUT](https://github.com/sz3/cimbar/blob/master/ABOUT.md) | [CFC](https://github.com/sz3/cfc) | LIBCIMBAR
+### [INTRODUCTION](https://github.com/sz3/cimbar) | [ABOUT](https://github.com/sz3/cimbar/blob/master/ABOUT.md) | [CFC](https://github.com/turtleSST/cfc) | LIBCIMBAR
 ### [DETAILS](DETAILS.md) | [PERFORMANCE](PERFORMANCE.md) | [TODO](TODO.md)
 
 ## libcimbar: Color Icon Matrix Barcodes
@@ -17,7 +17,7 @@ The encoder outputs an animated barcode to a computer or smartphone screen:
 * Encoder web app: https://cimbar.org
 
 While the decoder is a cell phone app that uses the phone camera to read the animated barcode:
-* Decoder android app: https://github.com/sz3/cfc
+* Decoder android app: https://github.com/turtleSST/cfc
 
 No internet/bluetooth/NFC/etc is used. All data is transmitted through the camera lens. You can try it out yourself, or take my word that it works. :)
 
@@ -25,13 +25,13 @@ No internet/bluetooth/NFC/etc is used. All data is transmitted through the camer
 
 `cimbar` is a high-density 2D barcode format. Data is stored in a grid of colored tiles -- bits are encoded based on which tile is chosen, and which color is chosen to draw the tile. Reed Solomon error correction is applied on the data, to account for the lossy nature of the video -> digital decoding. Sub-1% error rates are expected, and corrected.
 
-`libcimbar`, this optimized implementation, includes a simple protocol for file encoding built on fountain codes (`wirehair`) and zstd compression. Files of up to 33MB (after compression!) are encoded in a series of cimbar codes, which can be output as images or a live video feed. Once enough distinct image frames have been decoded successfully, the file will be reconstructed and decompressed successfully. This is true even if the images are received out of order, or if some have been corrupted or are missing.
+`libcimbar`, this optimized implementation, includes a simple protocol for file encoding built on fountain codes (`wirehair`) and zstd compression. The current v2 Mode-B stream format supports compressed streams of roughly 119MB, with the practical target around 100MB. They are encoded in a series of cimbar codes, which can be output as images or a live video feed. Once enough distinct image frames have been decoded successfully, the file will be reconstructed and decompressed successfully. This is true even if the images are received out of order, or if some have been corrupted or are missing.
 
 ## Platforms
 
 The code is written in C++, and developed/tested on amd64+linux, arm64+android (decoder only), and emscripten+WASM (encoder only). It probably works, or can be made to work, on other platforms.
 
-Crucially, because the encoder compiles to asmjs and wasm, it can run on anything with a modern web browser. For offline use, you can either install cimbar.org as a progressive web app, or [download the latest release](https://github.com/sz3/libcimbar/releases/latest) of `cimbar_js.html`, save it locally, and open it in your web browser.
+Crucially, because the encoder compiles to asmjs and wasm, it can run on anything with a modern web browser. For offline use, you can either install cimbar.org as a progressive web app, or [download the v2 encoder](https://github.com/turtleSST/libcimbar/releases/download/v0.6.8-fountain-v2/cimbar_js.html), save it locally, and open it in your web browser.
 
 ## Library dependencies
 
@@ -95,7 +95,7 @@ Encode and animate to window:
 ./cimbar_send inputfile.pdf
 ```
 
-You can also encode a file using [cimbar.org](https://cimbar.org), or the latest [release](https://github.com/sz3/libcimbar/releases/latest).
+You can also encode a file using [cimbar.org](https://cimbar.org), or the [v2 encoder release](https://github.com/turtleSST/libcimbar/releases/download/v0.6.8-fountain-v2/cimbar_js.html).
 
 ## Performance numbers
 

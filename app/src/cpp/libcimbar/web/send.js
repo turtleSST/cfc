@@ -103,7 +103,10 @@ var Send = function () {
     },
 
     rotate_window: function (needRotate) {
-      Module._cimbare_rotate_window(needRotate);
+      // The first resize can happen before the asynchronous WASM module is ready.
+      if (typeof Module._cimbare_rotate_window === "function") {
+        Module._cimbare_rotate_window(needRotate);
+      }
     },
 
     encode_init: function (filename) {
