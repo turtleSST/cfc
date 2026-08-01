@@ -66,7 +66,9 @@ TEST_CASE( "FountainSinkSpecialTest/testMultipart", "[unit]" )
 	stringstream input = dummyContents(totalSize, randostr);
 	fountain_encoder_stream::ptr fes = fountain_encoder_stream::create(input, 750, 108);
 
-	const int expectedBlocks = 1613;
+	// The v2 header reduces the payload from 744 to 742 bytes for this
+	// standalone 750-byte stream, so Wirehair needs 8087 source blocks.
+	const int expectedBlocks = 1617;
 	for (int i = 0; i < (totalSize / 7500) * 3; ++i)
 	{
 		string iframe = createFrame(*fes);

@@ -112,7 +112,7 @@ TEST_CASE( "cimbar_recv_jsTest/testFullDecode", "[unit]" )
 
 	// when res > 0
 	{
-		uint32_t fileId = res;
+		uint64_t fileId = res;
 
 		assertEquals( 7347, cimbard_get_filesize(fileId) );
 

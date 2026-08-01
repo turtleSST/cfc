@@ -56,7 +56,7 @@ TEST_CASE( "FountainStreamTest/testEncoder_BlockHeader", "[unit]" )
 		assertEquals( res, buff.size() );
 
 		// encode_id
-		assertEquals( 0, buff[0] );
+		assertEquals( 0, (unsigned char)buff[0] );
 
 		// total size == 10000
 		assertEquals( 0, buff[1] );
@@ -69,6 +69,8 @@ TEST_CASE( "FountainStreamTest/testEncoder_BlockHeader", "[unit]" )
 			assertEquals( i+1, (unsigned)buff[5] );
 		else
 			assertEquals( i, (unsigned)buff[5] );
+		assertEquals( 0, buff[6] );
+		assertEquals( (unsigned char)0xC2, (unsigned char)buff[7] );
 	}
 
 	assertEquals( 21, fes->block_count() );
@@ -128,8 +130,8 @@ TEST_CASE( "FountainStreamTest/testEncoder_Consistency", "[unit]" )
 	assertEquals( res, buff.size() );
 	full << string(buff.begin(), buff.end());
 
-	std::string expected = {0, 0, 0x03, (char)0xe8, 0, 0};
-	expected += input.str().substr(0, 394);
+	std::string expected = {0, 0, 0x03, (char)0xe8, 0, 0, 0, (char)0xC2};
+	expected += input.str().substr(0, 392);
 
 	assertEquals( expected, full.str() );
 }
@@ -217,7 +219,7 @@ TEST_CASE( "FountainStreamTest/testDecode", "[unit]" )
 			assertMsg(output, "couldn't decode :(");
 	}
 
-	assertEquals( 824, fds.block_size() );
+	assertEquals( 822, fds.block_size() );
 	assertEquals( 10000, fds.data_size() );
 	assertTrue( fds.good() );
 	assertEquals( fes->blocks_required(), fds.blocks_required() );
@@ -261,7 +263,7 @@ TEST_CASE( "FountainStreamTest/testDecode_BigPackets", "[unit]" )
 			assertMsg(output, "couldn't decode :(");
 	}
 
-	assertEquals( 824, fds.block_size() );
+	assertEquals( 822, fds.block_size() );
 	assertEquals( 10000, fds.data_size() );
 	assertTrue( fds.good() );
 

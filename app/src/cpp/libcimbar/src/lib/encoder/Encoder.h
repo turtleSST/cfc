@@ -186,6 +186,9 @@ inline fountain_encoder_stream::ptr Encoder::create_fountain_encoder(STREAM& str
 		ss = std::move(f);
 	}
 
-	return fountain_encoder_stream::create(ss, chunk_size, _encodeId);
+	auto fes = fountain_encoder_stream::create(ss, chunk_size, _encodeId);
+	if (!fes || !fes->good())
+		return nullptr;
+	return fes;
 }
 

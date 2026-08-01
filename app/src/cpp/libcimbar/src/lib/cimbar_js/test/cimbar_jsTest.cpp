@@ -53,7 +53,7 @@ TEST_CASE( "cimbar_jsTest/testRoundtrip", "[unit]" )
 
 	// when res > 0
 	{
-		uint32_t fileId = res;
+		uint64_t fileId = res;
 
 		std::string actualFilename;
 		actualFilename.resize(255);

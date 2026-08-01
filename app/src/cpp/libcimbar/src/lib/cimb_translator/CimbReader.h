@@ -20,7 +20,7 @@ public:
 	CIMBAR_ALWAYS_INLINE unsigned read_color(const PositionData& pos) const;
 	bool done() const;
 
-	void init_ccm(unsigned color_bits, unsigned interleave_blocks, unsigned interleave_partitions, unsigned fountain_blocks);
+	void init_ccm(unsigned color_bits, unsigned interleave_blocks, unsigned interleave_partitions, unsigned fountain_blocks, unsigned fountain_chunk_size=0);
 	void update_metadata(char* buff, unsigned len, unsigned chunk_size);
 
 	unsigned num_reads() const;

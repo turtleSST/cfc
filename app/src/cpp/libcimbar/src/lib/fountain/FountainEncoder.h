@@ -4,6 +4,8 @@
 #include "FountainInit.h"
 #include "wirehair/wirehair.h"
 #include <cassert>
+#include <cstddef>
+#include <utility>
 
 class FountainEncoder
 {

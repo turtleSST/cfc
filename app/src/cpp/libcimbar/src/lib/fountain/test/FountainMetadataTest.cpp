@@ -12,10 +12,11 @@ namespace {
 
 TEST_CASE( "FountainMetadataTest/testFromBytes", "[unit]" )
 {
-	std::string buff = {5, 15, 15, 15, 0, 0, 0, 0};
+	std::string buff = {5, 15, 15, 15, 0, 0, 0, (char)0xC2};
 	FountainMetadata inmd(buff.data(), buff.size());
 	assertEquals( 5, inmd.encode_id() );
 	assertEquals( 0x0f0f0f, inmd.file_size() );
+	assertTrue( inmd.valid() );
 }
 
 TEST_CASE( "FountainMetadataTest/testFromBytes.Short", "[unit]" )
@@ -28,7 +29,7 @@ TEST_CASE( "FountainMetadataTest/testFromBytes.Short", "[unit]" )
 
 TEST_CASE( "FountainMetadataTest/testFromBytes.BigFile", "[unit]" )
 {
-	std::string buff = {(char)0x81, 7, 8, 9};
+	std::string buff = {(char)0x81, 7, 8, 9, 0, 0, 0, (char)0xC2};
 	FountainMetadata inmd(buff.data(), buff.size());
 	assertEquals( 1, inmd.encode_id() );
 	assertEquals( 0x1070809, inmd.file_size() );
@@ -47,9 +48,9 @@ TEST_CASE( "FountainMetadataTest/testThings", "[unit]" )
 
 TEST_CASE( "FountainMetadataTest/testIgnoreTopEncodeIdBit", "[unit]" )
 {
-	FountainMetadata inmd(250_uchar, 0xFFFFFF, 0U);
+	FountainMetadata inmd(250_uchar, 0x1FFFFFF, 0U);
 	assertEquals( 122, static_cast<unsigned>(inmd.encode_id()) );
-	assertEquals( 0xFFFFFF, inmd.file_size() );
+	assertEquals( 0x1FFFFFF, inmd.file_size() );
 
 	FountainMetadata outmd(inmd.id());
 	assertEquals( inmd.encode_id(), outmd.encode_id() );
@@ -58,9 +59,11 @@ TEST_CASE( "FountainMetadataTest/testIgnoreTopEncodeIdBit", "[unit]" )
 
 TEST_CASE( "FountainMetadataTest/testBigFile", "[unit]" )
 {
-	FountainMetadata inmd(2_uchar, 0x1FFFFFF, 0U);
+	FountainMetadata inmd(2_uchar, 100000000U, 64000U-1);
 	assertEquals( 2, static_cast<unsigned>(inmd.encode_id()) );
-	assertEquals( 0x1FFFFFF, inmd.file_size() );
+	assertEquals( 100000000U, inmd.file_size() );
+	assertEquals( 64000U-1, inmd.block_id() );
+	assertTrue( inmd.valid() );
 
 	FountainMetadata outmd(inmd.id());
 	assertEquals( inmd.encode_id(), outmd.encode_id() );

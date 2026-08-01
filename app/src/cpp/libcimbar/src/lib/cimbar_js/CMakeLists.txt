@@ -89,7 +89,9 @@ set (LINK_WASM_LIST
 	-s USE_GLFW=3
 	-s WASM_BIGINT=1
 	-s FILESYSTEM=0
-	-s TOTAL_MEMORY=134217728
+	# Keep a fixed heap to avoid memory-growth pauses during encoding. 512 MiB
+	# leaves room for a roughly 100 MB compressed stream and Wirehair workspace.
+	-s TOTAL_MEMORY=536870912
 	-s EXPORTED_FUNCTIONS='[${LINK_WASM_EXPORTED_FUNCTIONS}]'
 	-s EXPORTED_RUNTIME_METHODS=['HEAPU8']
 )

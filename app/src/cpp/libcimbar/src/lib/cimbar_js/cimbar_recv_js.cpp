@@ -24,7 +24,7 @@ namespace {
 
 	// for decompress
 	// we support only one decompress at a time!
-	uint32_t _decId = 0;
+	uint64_t _decId = 0;
 	std::vector<uchar> _reassembled;
 	std::unique_ptr<cimbar::zstd_decompressor<std::stringstream>> _dec;
 
@@ -40,7 +40,7 @@ namespace {
 	// set up stateful decompressor
 	// for api simplicity, this is coupled to recover_contents()
 	// ... but we *could* split them up
-	int init_decompress(uint32_t id)
+	int init_decompress(uint64_t id)
 	{
 		if (id != _decId)
 			return -11;
@@ -55,7 +55,7 @@ namespace {
 
 	// recovers file contents into _reassembled, and sets _decId = id if so.
 	// if the contents cannot be recovered, amounts to a no-op with error
-	int recover_contents(uint32_t id)
+	int recover_contents(uint64_t id)
 	{
 		if (id != _decId)
 		{
@@ -89,6 +89,15 @@ namespace {
 	unsigned fountain_chunk_size()
 	{
 		return cimbar::Config::fountain_chunk_size();
+	}
+
+	unsigned legacy_fountain_chunk_size()
+	{
+		unsigned legacyChunks = cimbar::Config::legacy_mode()
+			? cimbar::Config::fountain_chunks_per_frame()
+			: cimbar::Config::bits_per_cell() * 2;
+		unsigned usefulBytes = cimbar::Config::ecc_block_size() - cimbar::Config::ecc_bytes();
+		return cimbar::Config::capacity() * usefulBytes / cimbar::Config::ecc_block_size() / legacyChunks;
 	}
 
 	cv::UMat get_rgb(void* imgdata, int width, int height, int type)
@@ -191,9 +200,10 @@ int cimbard_scan_extract_decode(const uchar* imgdata, unsigned imgw, unsigned im
 // returns id of final file (can be used to get size of `finish_copy`'s buffer) if complete, 0 if success, -1 on error
 int64_t cimbard_fountain_decode(const unsigned char* buffer, unsigned size)
 {
-	unsigned chunkSize = fountain_chunk_size();
-	if (!_sink) // lazy-create the sink on first run
-		_sink = std::make_shared<fountain_decoder_sink>(chunkSize);
+	bool legacy = !FountainMetadata::looks_like_v2(reinterpret_cast<const char*>(buffer), size);
+	unsigned chunkSize = legacy ? legacy_fountain_chunk_size() : fountain_chunk_size();
+	if (!_sink or _sink->chunk_size() != chunkSize or _sink->legacy_format() != legacy)
+		_sink = std::make_shared<fountain_decoder_sink>(chunkSize, nullptr, legacy);
 
 	if (size == 0 or size % chunkSize != 0)
 		return -5;
@@ -215,7 +225,7 @@ int64_t cimbard_fountain_decode(const unsigned char* buffer, unsigned size)
 }
 
 // mostly for internal use, but also helpful for debugging
-unsigned cimbard_get_filesize(uint32_t id)
+unsigned cimbard_get_filesize(uint64_t id)
 {
 	FountainMetadata md(id);
 	return md.file_size();
@@ -223,7 +233,7 @@ unsigned cimbard_get_filesize(uint32_t id)
 
 // do recover() if does not exist (fail with appropriate neg values), if it does use the bytes.
 // stateful against a map (same as cimbard_decompress_read()
-int cimbard_get_filename(uint32_t id, char* filename, unsigned fnsize)
+int cimbard_get_filename(uint64_t id, char* filename, unsigned fnsize)
 {
 	int	res = recover_contents(id);
 	if (res < 0)
@@ -244,7 +254,7 @@ int cimbard_get_filename(uint32_t id, char* filename, unsigned fnsize)
 	return fn.size();
 }
 
-int cimbard_decompress_read(uint32_t id, unsigned char* buffer, unsigned size)
+int cimbard_decompress_read(uint64_t id, unsigned char* buffer, unsigned size)
 {
 	int	res = recover_contents(id);
 	if (res < 0)

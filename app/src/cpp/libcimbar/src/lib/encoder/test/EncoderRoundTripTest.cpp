@@ -32,7 +32,7 @@ TEST_CASE( "EncoderRoundTripTest/testFountain.Pad", "[unit]" )
 	EncoderPlus enc(4, 2);
 	assertEquals( 1, enc.encode_fountain(inputFile, outPrefix) );
 
-	uint64_t hash = 0xefcc8800efcea808;
+	uint64_t hash = 0xeecc8800efce8c48;
 	std::string path = fmt::format("{}_0.png", outPrefix);
 	cv::Mat encodedImg = cv::imread(path);
 	cv::cvtColor(encodedImg, encodedImg, cv::COLOR_BGR2RGB);
@@ -46,7 +46,9 @@ TEST_CASE( "EncoderRoundTripTest/testFountain.Pad", "[unit]" )
 		unsigned bytesDecoded = dec.decode_fountain(encodedImg, fds);
 		assertEquals( 7500, bytesDecoded );
 
-		std::string decodedContents = File(tempdir.path() / "0.626").read_all();
+		auto doneFiles = fds.get_done();
+		assertEquals( 1U, (unsigned)doneFiles.size() );
+		std::string decodedContents = File(tempdir.path() / doneFiles.front()).read_all();
 		assertEquals( "hello", decodedContents );
 
 		assertEquals( 1, fds.num_done() );
@@ -83,7 +85,7 @@ TEST_CASE( "EncoderRoundTripTest/testFountain.SinkMismatch", "[unit]" )
 	EncoderPlus enc(4, 2);
 	assertEquals( 1, enc.encode_fountain(inputFile, outPrefix) );
 
-	uint64_t hash = 0xaecc8800efce8c28;
+	uint64_t hash = 0xaeec8c00efce8c08;
 	std::string path = fmt::format("{}_0.png", outPrefix);
 	cv::Mat encodedImg = cv::imread(path);
 	cv::cvtColor(encodedImg, encodedImg, cv::COLOR_BGR2RGB);
@@ -134,7 +136,10 @@ TEST_CASE( "EncoderRoundTripTest/testStreaming", "[unit]" )
 
 	// done
 	assertEquals( 1, fds.num_done() );
-	std::string decodedContents = File(tempdir.path() / "0.5256").read_all();
-	assertEquals( 16727, decodedContents.size() );
+	auto doneFiles = fds.get_done();
+	assertEquals( 1U, (unsigned)doneFiles.size() );
+	std::string decodedContents = File(tempdir.path() / doneFiles.front()).read_all();
+	std::string expectedContents = File(TestCimbar::getProjectDir() + "/LICENSE").read_all();
+	assertEquals( expectedContents, decodedContents );
 	assertStringContains( "Mozilla Public License Version 2.0", decodedContents );
 }

@@ -3,9 +3,12 @@
 
 #include "FountainEncoder.h"
 #include "FountainMetadata.h"
+#include <algorithm>
+#include <cstdint>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <vector>
 
 class fountain_encoder_stream
 {
@@ -13,7 +16,8 @@ public:
 	using ptr = std::shared_ptr<fountain_encoder_stream>;
 
 protected:
-	static const unsigned _headerSize = 6;
+	static const unsigned _headerSize = FountainMetadata::md_size;
+	static constexpr unsigned _maxBlocks = 64000;
 
 protected:
 	fountain_encoder_stream(std::string&& data, unsigned buffer_size, uint8_t encode_id)
@@ -33,6 +37,8 @@ public:
 	template <typename STREAM>
 	static fountain_encoder_stream::ptr create(STREAM& stream, unsigned buffer_size, uint8_t encode_id=0)
 	{
+		if (buffer_size <= _headerSize)
+			return nullptr;
 		std::stringstream buffs;
 		if (stream)
 			buffs << stream.rdbuf();
@@ -44,7 +50,7 @@ public:
 	// ex: different ECC settings => different payload size => different fountain buffer size
 	bool restart_and_resize_buffer(unsigned buffer_size)
 	{
-		if (buffer_size > _data.size())
+		if (buffer_size <= _headerSize or buffer_size > _data.size())
 			return false;
 
 		_buffer.resize(buffer_size);
@@ -55,7 +61,11 @@ public:
 
 	bool good() const
 	{
-		return _encoder.good() and _data.size() > _encoder.packet_size();
+		return _encoder.good()
+			and _data.size() > _encoder.packet_size()
+			and _data.size() <= FountainMetadata::max_file_size
+			and blocks_required() <= _maxBlocks
+			and _block < _maxBlocks;
 	}
 
 	void restart()
@@ -72,7 +82,7 @@ public:
 
 	unsigned blocks_required() const
 	{
-		return (_data.size() / block_size()) + 1;
+		return (_data.size() + block_size() - 1) / block_size();
 	}
 
 	void encode_new_block()

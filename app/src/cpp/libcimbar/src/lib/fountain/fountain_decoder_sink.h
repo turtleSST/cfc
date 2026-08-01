@@ -9,6 +9,7 @@
 #include "util/File.h"
 
 #include <cstdio>
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <string>
@@ -53,9 +54,10 @@ std::function<std::string(const std::string&, const std::vector<uint8_t>&)> deco
 class fountain_decoder_sink
 {
 public:
-	fountain_decoder_sink(unsigned chunk_size, const std::function<std::string(const std::string&, const std::vector<uint8_t>&)>& on_store=nullptr)
+	fountain_decoder_sink(unsigned chunk_size, const std::function<std::string(const std::string&, const std::vector<uint8_t>&)>& on_store=nullptr, bool legacy=false)
 		: _chunkSize(chunk_size)
 		, _onStore(on_store)
+		, _legacy(legacy)
 	{
 	}
 
@@ -67,6 +69,11 @@ public:
 	unsigned chunk_size() const
 	{
 		return _chunkSize;
+	}
+
+	bool legacy_format() const
+	{
+		return _legacy;
 	}
 
 	std::string get_filename(const FountainMetadata& md) const
@@ -125,18 +132,21 @@ public:
 		return progress;
 	}
 
-	bool is_done(uint32_t id) const
+	bool is_done(uint64_t id) const
 	{
 		return _done.find(id) != _done.end();
 	}
 
 	int64_t decode_frame(const char* data, unsigned size)
 	{
-		if (size < FountainMetadata::md_size)
+		const unsigned headerSize = _legacy ? FountainMetadata::legacy_md_size : FountainMetadata::md_size;
+		if (size < headerSize)
 			return -10;
 
-		FountainMetadata md(data, size);
-		if (!md.file_size())
+		FountainMetadata md = _legacy
+			? FountainMetadata::from_legacy(data, size)
+			: FountainMetadata(data, size);
+		if (!md.valid() || !md.file_size())
 		{
 			/*std::cout << fmt::format("decode frame {} ... {},{},{},{}",
 									 md.file_size(), (unsigned)data[0], (unsigned)data[1], (unsigned)data[2], (unsigned)data[3]) << std::endl;*/
@@ -147,11 +157,20 @@ public:
 		if (is_done(md.id()))
 			return -1;
 
+		if (_chunkSize <= headerSize)
+			return -13;
+		const uint64_t payloadSize = _chunkSize - headerSize;
+		const uint64_t requiredBlocks = (static_cast<uint64_t>(md.file_size()) + payloadSize - 1) / payloadSize;
+		if (requiredBlocks > fountain_decoder_stream::max_blocks)
+			return -13;
+
 		// find or create
-		auto p = _streams.try_emplace(stream_slot(md), md.file_size(), _chunkSize);
+		auto p = _streams.try_emplace(stream_slot(md), md.file_size(), _chunkSize, headerSize);
 		fountain_decoder_stream& s = p.first->second;
 		if (s.data_size() != md.file_size())
 			return -12;
+		if (!s.good())
+			return -14;
 
 		bool finished = s.write(data, size);
 		if (!finished)
@@ -176,7 +195,7 @@ public:
 		return *this;
 	}
 
-	bool recover(uint32_t id, unsigned char* data, unsigned size)
+	bool recover(uint64_t id, unsigned char* data, unsigned size)
 	{
 		// iff you don't provide a write callback
 		// this finalizes the write.
@@ -203,12 +222,13 @@ protected:
 protected:
 	unsigned _chunkSize;
 	std::function<std::string(const std::string&, const std::vector<uint8_t>&)> _onStore;
+	bool _legacy;
 
 	// maybe instead of unordered_map+set, something where we can "age out" old streams?
 	// e.g. most recent 16/8, or something?
 	// question is what happens to _done/_streams when we wrap for continuous data streaming...
 	std::unordered_map<uint8_t, fountain_decoder_stream> _streams;
-	// track the uint32_t combo of (encode_id,size) to avoid redundant work
-	std::unordered_map<uint32_t, std::string> _done;
+	// track the uint64_t combo of (encode_id,size) to avoid redundant work
+	std::unordered_map<uint64_t, std::string> _done;
 	bool _logWrites;
 };

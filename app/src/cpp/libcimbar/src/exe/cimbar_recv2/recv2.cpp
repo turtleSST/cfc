@@ -152,7 +152,7 @@ int main(int argc, char** argv)
 		if (res > 0)
 		{
 			// attempt save
-			uint32_t fileId = res;
+			uint64_t fileId = res;
 
 			int size = cimbard_get_filesize(fileId);
 

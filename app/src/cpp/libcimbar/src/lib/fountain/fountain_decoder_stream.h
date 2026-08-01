@@ -2,18 +2,24 @@
 #pragma once
 
 #include "FountainDecoder.h"
+#include "FountainMetadata.h"
+#include <algorithm>
+#include <cstdint>
+#include <vector>
 #include <optional>
 #include <string>
 
 class fountain_decoder_stream
 {
 public:
-	static const unsigned _headerSize = 6;
+	static constexpr unsigned max_blocks = 64000;
+	static constexpr unsigned default_header_size = FountainMetadata::md_size;
 
 public:
-	fountain_decoder_stream(unsigned data_size, unsigned buffer_size)
-	    : _buffer(buffer_size, 0)
-	    , _decoder(data_size, block_size())
+	fountain_decoder_stream(unsigned data_size, unsigned buffer_size, unsigned header_size=default_header_size)
+	    : _headerSize(header_size)
+	    , _buffer(buffer_size, 0)
+	    , _decoder(data_size, buffer_size - header_size)
 	{
 	}
 
@@ -24,7 +30,7 @@ public:
 
 	unsigned blocks_required() const
 	{
-		return (data_size() / block_size()) + 1;
+		return (data_size() + block_size() - 1) / block_size();
 	}
 
 	unsigned block_size() const
@@ -89,6 +95,7 @@ public:
 	}
 
 protected:
+	unsigned _headerSize;
 	std::vector<uint8_t> _buffer;
 	FountainDecoder _decoder;
 	unsigned _buffIndex = 0;

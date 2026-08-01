@@ -137,7 +137,10 @@ namespace cimbar
 			cells_per_col_x = 112;
 			cells_per_col_y = cells_per_col_x;
 
-			fountain_chunks_scalar = 2;
+			// Four larger fountain blocks keep the frame payload unchanged while
+			// keeping the total block count below Wirehair's 16-bit limit for
+			// compressed streams up to roughly 119 MB.
+			fountain_chunks_scalar = -4;
 		}
 	};
 

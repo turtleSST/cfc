@@ -101,8 +101,9 @@ inline unsigned Decoder::do_decode(CimbReader& reader, STREAM& ostream)
 		symbolBuff.flush(rss);
 	}
 
-	// do color correction init, now that we (hopefully) have some fountain headers from the symbol decode
-	reader.init_ccm(colorBits, interleaveBlocks, interleavePartitions, fountain_chunks_per_frame);
+	// Do color correction init now that we have the Fountain header from the
+	// symbol pass. The reader derives the sample positions from the chunk size.
+	reader.init_ccm(colorBits, interleaveBlocks, interleavePartitions, fountain_chunks_per_frame, cimbar::Config::fountain_chunk_size());
 
 	bitbuffer colorBuff(colorCapacity);
 	// then decode colors.

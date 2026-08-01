@@ -10,6 +10,7 @@
 #include "chromatic_adaptation/adaptation_transform.h"
 #include "chromatic_adaptation/color_correction.h"
 #include <opencv2/opencv.hpp>
+#include <vector>
 
 using namespace cimbar;
 
@@ -166,7 +167,7 @@ bool CimbReader::done() const
 	return !_good or _positions.done();
 }
 
-void CimbReader::init_ccm(unsigned color_bits, unsigned interleave_blocks, unsigned interleave_partitions, unsigned fountain_blocks)
+void CimbReader::init_ccm(unsigned color_bits, unsigned interleave_blocks, unsigned interleave_partitions, unsigned fountain_blocks, unsigned fountain_chunk_size)
 {
 	if (_colorCorrection != 2)
 		return;
@@ -187,21 +188,52 @@ void CimbReader::init_ccm(unsigned color_bits, unsigned interleave_blocks, unsig
 
 	// 3. using expected fountain headers, decode color for each position
 	unsigned end = cimbar::Config::capacity(color_bits) * 8 / color_bits;
-	unsigned headerStartInterval = cimbar::Config::capacity(_decoder.symbol_bits() + color_bits) * 8 / fountain_blocks / color_bits;
-	unsigned headerLen = (_fountainColorHeader.md_size) * 8 / color_bits; // shrink this to md_size-2 to discard the block_id bytes...
-	// we can ditch the "radioactive block id" conceit if you stick with md_size-2 (4),
-	// but having 6 bytes (50% more...) to work with seems like it might be more resilient in the face of errors?
+	unsigned headerLen = FountainMetadata::md_size * 8 / color_bits;
+	std::vector<unsigned> headerStarts;
 
-	//std::cout << fmt::format("fountain blocks={},capacity={}", fountain_blocks, cimbar::Config::capacity(_decoder.symbol_bits() + color_bits)) << std::endl;
-	//std::cout << fmt::format("fountain end={},headerstart={},headerlen={}", end, headerStartInterval, headerLen) << std::endl;
-	//std::cout << fmt::format("headerintervalcalc={},fountainblocks={}, color_bits={}", cimbar::Config::capacity(_decoder.symbol_bits() + color_bits), fountain_blocks, color_bits) << std::endl;
+	if (fountain_chunk_size == 0)
+	{
+		// Compatibility path for callers that use the historical fixed sampling
+		// layout. The decoder passes a chunk size below so new frame layouts do
+		// not depend on the number of chunks per frame.
+		headerLen = (FountainMetadata::md_size - 2) * 8 / color_bits;
+		unsigned headerStartInterval = cimbar::Config::capacity(_decoder.symbol_bits() + color_bits) * 8 / fountain_blocks / color_bits;
+		for (unsigned block = 0; block < end; block += headerStartInterval)
+			headerStarts.push_back(block);
+	}
+	else
+	{
+		// The color pass contains the RS-encoded bytes after the symbol pass.
+		// Find actual Fountain packet headers in that byte range instead of
+		// assuming that the color pass starts on a packet boundary.
+		const unsigned rsDataBytes = cimbar::Config::ecc_block_size() - cimbar::Config::ecc_bytes();
+		const unsigned rsEncodedBytes = cimbar::Config::ecc_block_size();
+		const unsigned symbolEncodedBytes = cimbar::Config::capacity(_decoder.symbol_bits());
+		const unsigned symbolDataBytes = symbolEncodedBytes * rsDataBytes / rsEncodedBytes;
+		const unsigned colorEncodedBytes = cimbar::Config::capacity(color_bits);
+		const unsigned colorDataBytes = colorEncodedBytes * rsDataBytes / rsEncodedBytes;
+
+		for (unsigned packetOffset = 0; packetOffset < symbolDataBytes + colorDataBytes; packetOffset += fountain_chunk_size)
+		{
+			if (packetOffset < symbolDataBytes or packetOffset >= symbolDataBytes + colorDataBytes)
+				continue;
+
+			unsigned colorDataOffset = packetOffset - symbolDataBytes;
+			if (colorDataOffset % rsDataBytes != 0)
+				continue;
+
+			unsigned encodedOffset = (colorDataOffset / rsDataBytes) * rsEncodedBytes;
+			unsigned colorPosition = encodedOffset * 8 / color_bits;
+			if (colorPosition + headerLen <= end)
+				headerStarts.push_back(colorPosition);
+		}
+	}
 
 	// get color map
 	std::unordered_map<uint16_t, std::tuple<unsigned, unsigned, unsigned, unsigned>> colors;
 	bitbuffer buff;
-	for (unsigned block = 0; block < end; block+=headerStartInterval)
+	for (unsigned block : headerStarts)
 	{
-		// TODO: could just copy/write final 2 bytes after first round?
 		buff.copy_to_buffer(reinterpret_cast<const char*>(_fountainColorHeader.data()), _fountainColorHeader.md_size);
 
 		// sample all colors in header

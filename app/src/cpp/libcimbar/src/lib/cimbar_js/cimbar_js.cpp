@@ -190,8 +190,11 @@ int cimbare_encode(const unsigned char* buffer, unsigned size)
 	// create the encoder stream
 	_fes = fountain_encoder_stream::create(*_comp, fountainChunkSize, _encodeId);
 	_comp.reset();
-	if (!_fes)
+	if (!_fes || !_fes->good())
+	{
+		_fes.reset();
 		return -3;
+	}
 
 	_next.reset();
 	return 0;
