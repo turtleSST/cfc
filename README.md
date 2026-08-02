@@ -19,9 +19,13 @@ The bundled WebView encoder uses the Fountain v2 assets from [turtleSST/cimbar-j
      alt="Get it on Google Play"
      height="80">](https://play.google.com/store/apps/details?id=org.cimbar.camerafilecopy)
 
-Release apks are also available here: https://github.com/turtleSST/cfc/releases/tag/v0.6.8-fountain-v2
+The current personal-use release APK is available here: https://github.com/turtleSST/cfc/releases/tag/v0.6.8-fountain-v2-release
 
 Only arm64-v8a is officially supported at the moment, because that is all I can test for.
+
+The release build is signed with the local Android debug keystore so it can update an existing
+debug installation without changing the application ID. This is suitable for personal use; a
+separate private signing key must be configured before public store distribution.
 
 ## Building
 
