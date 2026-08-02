@@ -232,8 +232,8 @@ public class MainActivity extends CameraActivity implements CvCameraViewListener
         }
     }
 
-    private native String processImageJNI(long mat, String path, int modeInt);
-    private native void shutdownJNI();
+    protected native String processImageJNI(long mat, String path, int modeInt);
+    protected native void shutdownJNI();
 
     @Override
     public boolean onTouchEvent(MotionEvent event){
